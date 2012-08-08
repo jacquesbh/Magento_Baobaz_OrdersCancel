@@ -13,6 +13,10 @@ class Baobaz_OrdersCancel_Model_Observer {
     private $status_to_cancel;
     private $expiration_time;
 
+    /**
+     * Cancel orders which are getting moldy
+     * @param $schedule
+     */
     public function cancelOldOrders($schedule) {
         //configuration
         $this->log_file = Mage::getStoreConfig('sales/orderscancel/log_file');
