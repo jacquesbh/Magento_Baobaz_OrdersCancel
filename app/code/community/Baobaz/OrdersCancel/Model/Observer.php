@@ -18,8 +18,6 @@ class Baobaz_OrdersCancel_Model_Observer {
         $this->log_file = Mage::getStoreConfig('sales/orderscancel/log_file');
         $this->status_to_cancel = Mage::getStoreConfig('sales/orderscancel/status_to_cancel');
         $days = (int)Mage::getStoreConfig('sales/orderscancel/expiration_days');
-        //$this->status_to_cancel = Mage::getStoreConfig('orderscancel/ordersettings/status_to_cancel');
-        //$days = (int)Mage::getStoreConfig('orderscancel/timesettings/days');
         $hours = (int)Mage::getStoreConfig('sales/orderscancel/expiration_hours');
         $minutes = (int)Mage::getStoreConfig('sales/orderscancel/expiration_minutes');
         $this->expiration_time = (($days * 24 + $hours) * 60 + $minutes) * 60;
@@ -28,21 +26,23 @@ class Baobaz_OrdersCancel_Model_Observer {
        
         //getting all orders needed to be process
         $order_model = Mage::getModel('sales/order');
-        $orders = $order_model->getCollection()
-                ->addAttributeToFilter('status', array('in' => $status))
-                ->addAttributeToFilter('created_at', array('lt' => date('Y-m-d H:i:s', time() - $this->expiration_time)));
+        /** @var $orders Mage_Sales_Model_Resource_Order_Collection */
+        $orders = $order_model->getCollection();
+        $orders->addAttributeToFilter('status', array('in' => $status));
+        $orders->addAttributeToFilter('created_at', array('lt' => date('Y-m-d H:i:s', time() - $this->expiration_time)));
 
         $nb_orders = count($orders);
 
         if($nb_orders > 0) {
             Mage::log('Beginning of cancelling '. $nb_orders .' old order(s)', null, $this->log_file);
             foreach ($orders as $order) {
+                /** @var $order Mage_Sales_Model_Order */
                 try{
                     $order = Mage::getModel('sales/order')->load($order->getId());
                     if ($order->canCancel()) {
                         $order->cancel();
                         //Adding comment for differentiating order automatically or manually canceled
-                        $order->addStatusToHistory($order->getStatus(), 'Order automatically canceled because older than '. $days .' day(s) '. $hours .' hour(s) and '. $minutes .' minute(s)');
+                        $order->addStatusHistoryComment('Order automatically canceled because older than '. $days .' day(s) '. $hours .' hour(s) and '. $minutes .' minute(s)', $order->getStatus());
                         $order->save();
                         Mage::log('Order ' . $order->getRealOrderId() . ' canceled', null, $this->log_file);
                     }

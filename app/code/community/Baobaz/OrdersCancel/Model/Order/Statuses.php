@@ -10,24 +10,28 @@
 
 class Baobaz_OrdersCancel_Model_Order_Statuses
 {
-       // set null to enable all possible
+    /**
+     * States for which we can cancel an order
+     * @var array
+     */
     protected $_stateStatuses = array(
         Mage_Sales_Model_Order::STATE_NEW,
         Mage_Sales_Model_Order::STATE_PENDING_PAYMENT,
-//        Mage_Sales_Model_Order::STATE_PROCESSING,
-//        Mage_Sales_Model_Order::STATE_COMPLETE,
-//        Mage_Sales_Model_Order::STATE_CLOSED,
-//        Mage_Sales_Model_Order::STATE_CANCELED,
-//        Mage_Sales_Model_Order::STATE_HOLDED,
     );
 
+    /**
+     * Gives array of all order statuses that can be canceled
+     * @return array
+     */
     public function toOptionArray()
     {
+        /** @var $orderConfig Mage_Sales_Model_Order_Config */
+        $orderConfig = Mage::getSingleton('sales/order_config');
         if ($this->_stateStatuses) {
-            $statuses = Mage::getSingleton('sales/order_config')->getStateStatuses($this->_stateStatuses);
+            $statuses = $orderConfig->getStateStatuses($this->_stateStatuses);
         }
         else {
-            $statuses = Mage::getSingleton('sales/order_config')->getStatuses();
+            $statuses = $orderConfig->getStatuses();
         }
         $options = array();
         $options[] = array(
